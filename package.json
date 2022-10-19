@@ -1,0 +1,17 @@
+{
+  "name": "com.plugin.widgetfloat",
+  "version": "1.0.0",
+  "description": "create floating widget native.",
+  "cordova": {
+    "id": "com.plugin.widgetfloat",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "author": "704 Apps",
+  "license": "null"
+}

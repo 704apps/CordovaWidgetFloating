@@ -88,7 +88,7 @@ public class LocationService extends Service {
                 getApplicationContext(),
                 0,
                 resultIntent,
-                PendingIntent.FLAG_MUTABLE
+                PendingIntent.FLAG_IMMUTABLE
         );
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 getApplicationContext(),

@@ -44,7 +44,10 @@
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <service android:name="com.plugin.widgetfloat.FloatingWidgetService" />
-            <service android:name="com.plugin.widgetfloat.LocationService" android:enabled="true" android:exported="false" />
+            <service android:name="com.plugin.widgetfloat.LocationService"
+                    android:enabled="true"
+                    android:exported="false"
+                    android:foregroundServiceType="location" />
         </config-file>
 
         <resource-file src="res/layout/overlay_layout.xml" target="res/layout/overlay_layout.xml" />

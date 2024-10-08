@@ -19,6 +19,10 @@ module.exports.getPermission = function (successCallback, errorCallback) {
     cordova.exec(successCallback,errorCallback, "FloatingWidget", "getPermission", []);
 }
 
+module.exports.askDataSaverExceptionPermission = function (successCallback, errorCallback) {
+    cordova.exec(successCallback,errorCallback, "FloatingWidget", "getPermission", []);
+}
+
 module.exports.getPermissionLocation = function (successCallback, errorCallback) {
     cordova.exec(successCallback,errorCallback, "FloatingWidget", "getPermissionLocation", []);
 }

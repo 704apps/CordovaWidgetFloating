@@ -108,6 +108,16 @@ public class FloatingWidget extends CordovaPlugin {
             return true;
         }
 
+        if (action.equals("askDataSaverExceptionPermission")) {
+            // Chama a função para solicitar a exceção de Data Saver
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    checkAndRequestDataSaverException(cordova.getActivity());
+                }
+            });
+            return true;
+        }
+
         if (action.equals("onListenerLocation")) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
@@ -153,6 +163,25 @@ public class FloatingWidget extends CordovaPlugin {
     private boolean checkSystemOverlayPermission() {
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(cordova.getContext()));
     }
+
+    public void checkAndRequestDataSaverException(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    
+            // Verifica se a rede é medida
+            if (connMgr.isActiveNetworkMetered()) {
+                PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+    
+                // Verifica se o aplicativo está na lista de exceções de restrição de dados
+                if (!powerManager.isIgnoringBatteryOptimizations(context.getPackageName())) {
+                    // O app não está na lista de exceção, redireciona o usuário para as configurações de Data Saver
+                    Intent intent = new Intent(Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS,
+                            Uri.parse("package:" + context.getPackageName()));
+                    context.startActivity(intent);
+                }
+            }
+        }
+    }    
 
     private void openFloatingWidget() {
         Activity context = cordova.getActivity();

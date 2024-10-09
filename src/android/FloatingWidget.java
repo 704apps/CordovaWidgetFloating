@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.provider.Settings;
 import androidx.core.app.ActivityCompat;
@@ -189,12 +190,23 @@ public class FloatingWidget extends CordovaPlugin {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             context.startService(new Intent(cordova.getActivity(), FloatingWidgetService.class));
             // finish();
-        } else if (Settings.canDrawOverlays(cordova.getActivity())) {
-            context.startService(new Intent(cordova.getActivity(), FloatingWidgetService.class));
-            // finish();
         } else {
-            askForSystemOverlayPermission();
-            Toast.makeText(cordova.getActivity(), "You need System Alert Window Permission to do this", Toast.LENGTH_SHORT).show();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            
+                int dataSaverStatus = connectivityManager.getRestrictBackgroundStatus();
+                switch (dataSaverStatus) {
+                    case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED:
+                            Intent intent = new Intent(Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS,
+                            Uri.parse("package:" + context.getPackageName()));
+                        context.startActivity(intent);
+                        break;
+                    case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED:
+                        break;
+                    case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED:
+                        break;
+                }
+            }
         }
 
     }

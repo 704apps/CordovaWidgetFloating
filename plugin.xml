@@ -24,6 +24,7 @@
         <framework src="com.google.android.gms:play-services-location:17.0.0" />
         <framework src="com.karumi:dexter:5.0.0" />
         <framework src="com.google.firebase:firebase-firestore:17.0.0" />
+        <framework src="io.socket:socket.io-client:2.0.0" />
         <framework src="src/android/build.gradle" custom="true" type="gradleReference"/>
 
         <config-file target="AndroidManifest.xml" parent="/*">

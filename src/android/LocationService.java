@@ -47,11 +47,18 @@ public class LocationService extends Service {
                         objectData.put("latitude", latitude);
                         objectData.put("longitude", longitude);
 
+                        JSONObject socketData = new JSONObject();
+                        socketData.put("driverId", 3);
+                        socketData.put("latitude", latitude);
+                        socketData.put("longitude", longitude);
+
                         JSONArray datas = new JSONArray();
 
                         datas.put(objectData);
 
                         requestApi.sendPost(getApplicationContext(), url, datas.toString(), headers);
+
+                        SocketManager.getInstance().emitEvent("driver.location", socketData);
 
                         Intent intent = new Intent("location_update");
                         intent.putExtra("latitude",latitude);

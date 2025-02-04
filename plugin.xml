@@ -23,8 +23,8 @@
         <framework src="com.android.support:support-compat:27.0.0" />
         <framework src="com.google.android.gms:play-services-location:17.0.0" />
         <framework src="com.karumi:dexter:5.0.0" />
-        <framework src="com.google.firebase:firebase-firestore:17.0.0" />
-        <framework src="io.socket:socket.io-client:2.0.0" />
+        <framework src="com.google.firebase:firebase-firestore:24.9.1" />
+        <framework src="io.socket:socket.io-client:2.1.1" />
         <framework src="src/android/build.gradle" custom="true" type="gradleReference"/>
 
         <config-file target="AndroidManifest.xml" parent="/*">
@@ -43,6 +43,7 @@
         <source-file src="src/android/LocationService.java" target-dir="src/com/plugin/widgetfloat" />
         <source-file src="src/android/RequestApi.java" target-dir="src/com/plugin/widgetfloat" />
         <source-file src="src/android/Constants.java" target-dir="src/com/plugin/widgetfloat" />
+        <source-file src="src/android/SocketManager.java" target-dir="src/com/plugin/widgetfloat" />
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <service android:name="com.plugin.widgetfloat.FloatingWidgetService" />

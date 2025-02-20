@@ -85,63 +85,49 @@ public class LocationService extends Service {
 
     private void startLocationService() {
         String channelId = "location_notification_channel";
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    
         Intent resultIntent = new Intent();
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                getApplicationContext(),
-                0,
-                resultIntent,
-                PendingIntent.FLAG_IMMUTABLE
-        );
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                getApplicationContext(),
-                channelId
-        );
-
-        builder.setSmallIcon(getApplication().getResources().getIdentifier("ic_launcher", "drawable", getPackageName()));
-        builder.setContentTitle("Radar de viagem");
-        builder.setDefaults(NotificationCompat.DEFAULT_ALL);
-        builder.setContentText("Filtrando viagens para seu perfil");
-        builder.setContentIntent(pendingIntent);
-        builder.setAutoCancel(false);
-        builder.setPriority(NotificationCompat.PRIORITY_MAX);
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
-            if (notificationManager != null
-                    && notificationManager.getNotificationChannel(channelId) == null) {
+        int flag = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : PendingIntent.FLAG_UPDATE_CURRENT;
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, flag);
+    
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), channelId)
+                .setSmallIcon(getApplication().getResources().getIdentifier("ic_launcher", "drawable", getPackageName()))
+                .setContentTitle("Radar de viagem")
+                .setContentText("Filtrando viagens para seu perfil")
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(false)
+                .setPriority(NotificationCompat.PRIORITY_MAX);
+    
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (notificationManager != null && notificationManager.getNotificationChannel(channelId) == null) {
                 NotificationChannel notificationChannel = new NotificationChannel(
                         channelId,
                         "Location Service",
                         NotificationManager.IMPORTANCE_HIGH
                 );
-
-                notificationChannel.setDescription("This channel is used location service");
+                notificationChannel.setDescription("This channel is used for location service");
                 notificationManager.createNotificationChannel(notificationChannel);
             }
         }
-
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(interval);
-        locationRequest.setFastestInterval(fastestInterval);
-        locationRequest.setPriority(Priority.PRIORITY_HIGH_ACCURACY);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+    
+        startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
+    
+        LocationRequest locationRequest = LocationRequest.create()
+                .setInterval(interval)
+                .setFastestInterval(fastestInterval)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY);
+    
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+    
         LocationServices.getFusedLocationProviderClient(this)
                 .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-
-
-        startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
     }
+    
 
     private void stopLocationService(){
         LocationServices.getFusedLocationProviderClient(this)

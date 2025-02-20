@@ -36,11 +36,13 @@ public class LocationService extends Service {
         public void onLocationResult(LocationResult locationResult) {
             super.onLocationResult(locationResult);
             if (locationResult != null && locationResult.getLastLocation() != null) {
+                Log.e("onLocationResult URL", url);
                 double latitude = locationResult.getLastLocation().getLatitude();
                 double longitude = locationResult.getLastLocation().getLongitude();
 
                 if (url != null){
                     try {
+                        Log.e("onLocationResult Try", latitude + " - " + longitude);
                         Map<String, String> headers = new HashMap<>();
 
                         JSONObject objectData = new JSONObject(data);

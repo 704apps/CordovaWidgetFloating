@@ -15,11 +15,12 @@ public class SocketManager {
     private Socket socket;
     private static final String TAG = "SocketManager";
 
-    private static final String SOCKET_URL = "https://mobilidade-api-node-uby.prod.704apps.com.br/";
+    private static final String SOCKET_URL = "https://mobilidade-api-node-uby.prod.704apps.com.br?driverId=35&latitude=-3.722926557567814&longitude=-38.53897610560655";
 
     private SocketManager() {
         try {
             socket = IO.socket(SOCKET_URL);
+            Log.e(TAG, "Socket criado com sucesso");
         } catch (URISyntaxException e) {
             Log.e(TAG, "Erro ao criar o socket: " + e.getMessage());
         }

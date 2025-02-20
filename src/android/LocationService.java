@@ -1,5 +1,6 @@
 package com.plugin.widgetfloat;
 
+import io.socket.client.Socket;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -42,6 +43,22 @@ public class LocationService extends Service {
                 if (url != null){
                     try {
                         Map<String, String> headers = new HashMap<>();
+
+                        JSONObject locationData = new JSONObject();
+                        locationData.put("latitude", latitude);
+                        locationData.put("longitude", longitude);
+                        locationData.put("driverId", 35);
+
+                        SocketManager.getInstance().connect();
+
+                        Socket socket = SocketManager.getInstance().getSocket();
+        
+                        if (socket != null && socket.connected()) {
+                            socket.emit("driver.location", locationData);
+                            Log.d("SocketEmit", "Evento 'driver.location' emitido: " + locationData.toString());
+                        } else {
+                            Log.e("SocketEmit", "Socket não está conectado. Não foi possível emitir o evento.");
+                        }
 
                         JSONObject objectData = new JSONObject(data);
                         objectData.put("latitude", latitude);

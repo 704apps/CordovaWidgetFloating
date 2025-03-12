@@ -109,21 +109,41 @@ public class FloatingWidget extends CordovaPlugin {
         }
 
         if (action.equals("onListenerLocation")) {
+            Log.d("PluginLocation", "onListenerLocation action received");
+        
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     if (broadcastReceiver == null) {
+                        Log.d("PluginLocation", "Creating new BroadcastReceiver");
+        
                         broadcastReceiver = new BroadcastReceiver() {
                             @Override
                             public void onReceive(Context context, Intent intent) {
                                 try {
+                                    Log.d("PluginLocation", "BroadcastReceiver triggered");
+        
+                                    if (intent.getExtras() == null) {
+                                        Log.e("PluginLocation", "Intent extras are null");
+                                        return;
+                                    }
+        
+                                    double latitude = intent.getExtras().getDouble("latitude", -1);
+                                    double longitude = intent.getExtras().getDouble("longitude", -1);
+        
+                                    Log.d("PluginLocation", "Received latitude: " + latitude);
+                                    Log.d("PluginLocation", "Received longitude: " + longitude);
+        
                                     JSONObject object = new JSONObject();
-                                    object.put("latitude", intent.getExtras().getDouble("latitude"));
-                                    object.put("longitude", intent.getExtras().getDouble("longitude"));
+                                    object.put("latitude", latitude);
+                                    object.put("longitude", longitude);
+        
                                     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, object.toString());
                                     pluginResult.setKeepCallback(true);
                                     callbackContext.sendPluginResult(pluginResult);
+        
+                                    Log.d("PluginLocation", "Sent plugin result: " + object.toString());
                                 } catch (JSONException e) {
-                                    e.printStackTrace();
+                                    Log.e("PluginLocation", "JSON Exception: " + e.getMessage(), e);
                                 }
                             }
                         };
@@ -131,15 +151,21 @@ public class FloatingWidget extends CordovaPlugin {
                         IntentFilter filter = new IntentFilter("location_update");
         
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            Log.d("PluginLocation", "Registering receiver with RECEIVER_NOT_EXPORTED flag");
                             cordova.getActivity().registerReceiver(broadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
                         } else {
+                            Log.d("PluginLocation", "Registering receiver without extra flags");
                             cordova.getActivity().registerReceiver(broadcastReceiver, filter);
                         }
+                    } else {
+                        Log.d("PluginLocation", "BroadcastReceiver already initialized");
                     }
                 }
             });
+        
             return true;
         }
+        
 
         if (action.equals("close")) {
             closeFloatingWidget();

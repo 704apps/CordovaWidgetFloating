@@ -31,37 +31,50 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LocationService extends Service {
+
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             super.onLocationResult(locationResult);
+
             if (locationResult != null && locationResult.getLastLocation() != null) {
                 double latitude = locationResult.getLastLocation().getLatitude();
                 double longitude = locationResult.getLastLocation().getLongitude();
 
-                if (url != null){
-                    try {
-                        Map<String, String> headers = new HashMap<>();
+                Log.d("LocationService", "Localização recebida: Latitude: " + latitude + ", Longitude: " + longitude);
 
+                if (url != null) {
+                    try {
+                        Log.d("LocationService", "Enviando localização para API: " + url);
+
+                        // Preparando os dados para envio
+                        Map<String, String> headers = new HashMap<>();
                         JSONObject objectData = new JSONObject(data);
                         objectData.put("latitude", latitude);
                         objectData.put("longitude", longitude);
 
                         JSONArray datas = new JSONArray();
-
                         datas.put(objectData);
 
+                        // Enviando para a API
                         requestApi.sendPost(getApplicationContext(), url, datas.toString(), headers);
 
+                        // Enviando a localização via broadcast
                         Intent intent = new Intent("location_update");
-                        intent.putExtra("latitude",latitude);
-                        intent.putExtra("longitude",longitude);
+                        intent.putExtra("latitude", latitude);
+                        intent.putExtra("longitude", longitude);
 
+                        Log.d("LocationService", "Enviando broadcast com a localização...");
                         sendBroadcast(intent);
+
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        Log.e("LocationService", "Erro ao criar objeto JSON para a localização: ", e);
                     }
+                } else {
+                    Log.w("LocationService", "URL não definida para envio da localização.");
                 }
+            } else {
+                Log.w("LocationService", "Localização recebida é nula.");
             }
         }
     };
@@ -80,6 +93,8 @@ public class LocationService extends Service {
     }
 
     private void startLocationService() {
+        Log.d("LocationService", "Iniciando o serviço de localização...");
+
         String channelId = "location_notification_channel";
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -123,23 +138,21 @@ public class LocationService extends Service {
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e("LocationService", "Permissão de localização não concedida.");
             return;
         }
+
+        // Inicia o cliente de localização
+        Log.d("LocationService", "Solicitando atualizações de localização...");
         LocationServices.getFusedLocationProviderClient(this)
                 .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-
 
         startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
     }
 
-    private void stopLocationService(){
+    private void stopLocationService() {
+        Log.d("LocationService", "Parando o serviço de localização.");
+
         LocationServices.getFusedLocationProviderClient(this)
                 .removeLocationUpdates(locationCallback);
         stopForeground(true);
@@ -148,6 +161,8 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("LocationService", "onStartCommand chamado com a ação: " + intent.getAction());
+
         if(intent != null){
             String action = intent.getAction();
             if(action != null){
@@ -156,8 +171,10 @@ public class LocationService extends Service {
                     data =  intent.getExtras().getString("data");
                     interval = intent.getExtras().getLong("interval",20000);
                     fastestInterval = intent.getExtras().getLong("fastestInterval",20000);
+                    Log.d("LocationService", "Iniciando o serviço com URL: " + url);
                     startLocationService();
                 } else if (action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)){
+                    Log.d("LocationService", "Parando o serviço de localização.");
                     stopLocationService();
                 }
             }

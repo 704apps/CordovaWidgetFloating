@@ -151,10 +151,10 @@ public class FloatingWidget extends CordovaPlugin {
                         IntentFilter filter = new IntentFilter("location_update");
         
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            Log.d("PluginLocation", "tiramisull already initialized");
-                            cordova.getActivity().registerReceiver(broadcastReceiver, filter);
+                            Log.d("PluginLocation", "Registering receiver with RECEIVER_EXPORTED flag");
+                            cordova.getActivity().registerReceiver(broadcastReceiver, filter, Context.RECEIVER_EXPORTED);
                         } else {
-                            Log.d("PluginLocation", "tiramisull outro");
+                            Log.d("PluginLocation", "Registering receiver without extra flags");
                             cordova.getActivity().registerReceiver(broadcastReceiver, filter);
                         }
                     } else {

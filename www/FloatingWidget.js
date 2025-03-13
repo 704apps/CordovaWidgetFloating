@@ -46,7 +46,7 @@ module.exports.onListenerLocation = function(callback) {
         (data) => {
             try {
                 const location = JSON.parse(data);
-                console.warn("Localização recebida: ", location);  // Log para garantir que estamos recebendo dados
+                console.warn("Localização do onListenerLocation: ", location);  // Log para garantir que estamos recebendo dados
                 callback(location);
             } catch (e) {
                 console.error("Erro ao processar dados:", e);

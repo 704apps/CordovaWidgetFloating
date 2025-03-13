@@ -41,6 +41,22 @@ module.exports.stopLocationService = function (callback) {
     cordova.exec(callback, ()=>{}, "FloatingWidget", "stopLocationService", []);
 }
 
-module.exports.onListenerLocation = function (callback) {
-    cordova.exec((data)=> callback(JSON.parse(data)), ()=>{}, "FloatingWidget", "onListenerLocation", []);
-}
+module.exports.onListenerLocation = function(callback) {
+    cordova.exec(
+        (data) => {
+            try {
+                const location = JSON.parse(data);
+                console.warn("Localização recebida: ", location);  // Log para garantir que estamos recebendo dados
+                callback(location);
+            } catch (e) {
+                console.error("Erro ao processar dados:", e);
+            }
+        },
+        (error) => {
+            console.error("Erro no callback:", error);
+        },
+        "FloatingWidget", // Nome do plugin
+        "onListenerLocation", // Nome do método
+        [] // Parâmetros
+    );
+};

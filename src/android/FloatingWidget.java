@@ -122,41 +122,55 @@ public class FloatingWidget extends CordovaPlugin {
                                 try {
                                     Log.d("PluginLocation", "BroadcastReceiver triggered");
         
-                                    if (intent.getExtras() == null) {
+                                    // Verificar se o Intent possui extras
+                                    Bundle extras = intent.getExtras();
+                                    if (extras == null) {
                                         Log.e("PluginLocation", "Intent extras are null");
                                         return;
                                     }
         
-                                    double latitude = intent.getExtras().getDouble("latitude", -1);
-                                    double longitude = intent.getExtras().getDouble("longitude", -1);
+                                    // Verificar se os dados esperados estão presentes
+                                    if (!extras.containsKey("latitude") || !extras.containsKey("longitude")) {
+                                        Log.e("PluginLocation", "Latitude or Longitude not found in extras");
+                                        return;
+                                    }
+        
+                                    double latitude = extras.getDouble("latitude", -1);
+                                    double longitude = extras.getDouble("longitude", -1);
+        
+                                    // Verificar se as coordenadas são válidas
+                                    if (latitude == -1 || longitude == -1) {
+                                        Log.e("PluginLocation", "Invalid latitude or longitude received");
+                                        return;
+                                    }
         
                                     Log.d("PluginLocation", "Received latitude: " + latitude);
                                     Log.d("PluginLocation", "Received longitude: " + longitude);
         
+                                    // Criar o objeto JSON de resposta
                                     JSONObject object = new JSONObject();
                                     object.put("latitude", latitude);
                                     object.put("longitude", longitude);
         
+                                    // Enviar o resultado para o callback
                                     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, object.toString());
                                     pluginResult.setKeepCallback(true);
                                     callbackContext.sendPluginResult(pluginResult);
         
                                     Log.d("PluginLocation", "Sent plugin result: " + object.toString());
+        
                                 } catch (JSONException e) {
                                     Log.e("PluginLocation", "JSON Exception: " + e.getMessage(), e);
+                                } catch (Exception e) {
+                                    Log.e("PluginLocation", "Unexpected error: " + e.getMessage(), e);
                                 }
                             }
                         };
         
                         IntentFilter filter = new IntentFilter("location_update");
-        
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            Log.d("PluginLocation", "Registering receiver with RECEIVER_EXPORTED flag");
-                            cordova.getActivity().registerReceiver(broadcastReceiver, filter, Context.RECEIVER_EXPORTED);
-                        } else {
-                            Log.d("PluginLocation", "Registering receiver without extra flags");
-                            cordova.getActivity().registerReceiver(broadcastReceiver, filter);
-                        }
+                        
+                        Log.d("PluginLocation", "Registering receiver using ContextCompat");
+                        ContextCompat.registerReceiver(cordova.getActivity(), broadcastReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
                     } else {
                         Log.d("PluginLocation", "BroadcastReceiver already initialized");
                     }
@@ -164,8 +178,7 @@ public class FloatingWidget extends CordovaPlugin {
             });
         
             return true;
-        }
-        
+        }         
 
         if (action.equals("close")) {
             closeFloatingWidget();

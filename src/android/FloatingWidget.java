@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -168,7 +169,7 @@ public class FloatingWidget extends CordovaPlugin {
                         };
         
                         IntentFilter filter = new IntentFilter("location_update");
-                        
+
                         Log.d("PluginLocation", "Registering receiver using ContextCompat");
                         ContextCompat.registerReceiver(cordova.getActivity(), broadcastReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
                     } else {

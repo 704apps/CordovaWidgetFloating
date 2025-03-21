@@ -114,7 +114,8 @@ public class FloatingWidget extends CordovaPlugin {
         
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
-                    Log.d("BroadcastReceiverLog", broadcastReceiver);
+                    Log.d("BroadcastReceiverLog", broadcastReceiver != null ? broadcastReceiver.toString() : "null");
+
                     if (broadcastReceiver == null) {
                         Log.d("PluginLocation", "Creating new BroadcastReceiver");
         

@@ -173,7 +173,7 @@ public class FloatingWidget extends CordovaPlugin {
                         IntentFilter filter = new IntentFilter("location_update");
 
                         Log.d("PluginLocation", "Registering receiver using ContextCompat");
-                        ContextCompat.registerReceiver(cordova.getActivity(), broadcastReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+                        ContextCompat.registerReceiver(cordova.getActivity(), broadcastReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
                     } else {
                         Log.d("PluginLocation", "BroadcastReceiver already initialized");
                     }

@@ -47,7 +47,7 @@
             <service android:name="com.plugin.widgetfloat.FloatingWidgetService" />
             <service android:name="com.plugin.widgetfloat.LocationService"
                     android:enabled="true"
-                    android:exported="false"
+                    android:exported="true"
                     android:foregroundServiceType="location" />
         </config-file>
 

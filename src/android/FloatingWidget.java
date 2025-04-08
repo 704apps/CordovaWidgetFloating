@@ -130,11 +130,7 @@ public class FloatingWidget extends CordovaPlugin {
         
                         IntentFilter filter = new IntentFilter("location_update");
         
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            cordova.getActivity().registerReceiver(broadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-                        } else {
-                            cordova.getActivity().registerReceiver(broadcastReceiver, filter);
-                        }
+                        ContextCompat.registerReceiver(cordova.getActivity(), broadcastReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
                     }
                 }
             });

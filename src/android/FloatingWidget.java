@@ -235,23 +235,28 @@ public class FloatingWidget extends CordovaPlugin {
             boolean backgroundLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
             if (!fineLocationGranted) {
+                Log.i("FloatingWidget", "Solicitando permissão de localização em primeiro plano");
                 ActivityCompat.requestPermissions(activity,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         CODE_REQUEST_PERMISSION);
             } else if (!backgroundLocationGranted) {
+                Log.i("FloatingWidget", "Solicitando permissão de localização em segundo plano");
                 ActivityCompat.requestPermissions(activity,
                         new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
                         CODE_REQUEST_PERMISSION);
             } else {
+                Log.i("FloatingWidget", "Todas as permissões já concedidas");
                 if (callbackContextPermission != null) callbackContextPermission.success();
             }
         } else {
             boolean fineLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             if (!fineLocationGranted) {
+                Log.i("FloatingWidget", "Solicitando permissão de localização em versões abaixo do Android 10");
                 ActivityCompat.requestPermissions(activity,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         CODE_REQUEST_PERMISSION);
             } else {
+                Log.i("FloatingWidget", "Permissão de localização já concedida em versões abaixo do Android 10");
                 if (callbackContextPermission != null) callbackContextPermission.success();
             }
         }
@@ -282,11 +287,11 @@ public class FloatingWidget extends CordovaPlugin {
             }
 
             if (!someDenied) {
+                Log.i("FloatingWidget", "Todas as permissões foram concedidas");
                 if (callbackContextPermission != null) {
                     callbackContextPermission.success();
                 }
             } else {
-                // Redireciona para as configurações do app
                 Log.i("FloatingWidget", "Redirecionando para configurações do app");
                 Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.parse("package:" + activity.getPackageName()));

@@ -143,6 +143,12 @@ public class FloatingWidget extends CordovaPlugin {
             return true;
         }
 
+        if (action.equals("openAppLocationSettingsManual")) {
+            openAppLocationSettingsManual();
+            callbackContext.success();
+            return true;
+        }
+
         return false; // Returning false results in a "MethodNotFound" error.
     }
 
@@ -502,5 +508,12 @@ public class FloatingWidget extends CordovaPlugin {
             intent.setData(Uri.parse("package:" + activity.getPackageName()));
             activity.startActivity(intent);
         }, 500); // 500ms de delay
+    }
+
+    public void openAppLocationSettingsManual() {
+        Activity activity = cordova.getActivity();
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+        activity.startActivity(intent);
     }
 }

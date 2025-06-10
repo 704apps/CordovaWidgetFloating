@@ -44,3 +44,7 @@ module.exports.stopLocationService = function (callback) {
 module.exports.onListenerLocation = function (callback) {
     cordova.exec((data)=> callback(JSON.parse(data)), ()=>{}, "FloatingWidget", "onListenerLocation", []);
 }
+
+module.exports.openAppLocationSettingsManual = function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "FloatingWidget", "openAppLocationSettingsManual", []);
+}

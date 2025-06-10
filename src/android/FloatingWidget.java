@@ -260,13 +260,11 @@ public class FloatingWidget extends CordovaPlugin {
             }
         }
 
-        // Redireciona para as configurações se a permissão já foi negada anteriormente
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            Log.i("FloatingWidget", "Redirecionando para configurações do app");
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + activity.getPackageName()));
-            activity.startActivity(intent);
-        }
+        // Redireciona para as configurações do app após a solicitação de permissão
+        Log.i("FloatingWidget", "Redirecionando para configurações do app");
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+        activity.startActivity(intent);
     }
 
     private void closeFloatingWidget() {

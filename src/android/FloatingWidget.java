@@ -269,44 +269,11 @@ public class FloatingWidget extends CordovaPlugin {
 
 
     @Override
-    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
-        Log.i("FloatingWidget", "onRequestPermissionResult chamado");
-        super.onRequestPermissionResult(requestCode, permissions, grantResults);
-
-        if (requestCode == CODE_REQUEST_PERMISSION) {
-            Activity activity = cordova.getActivity();
-            boolean someDenied = false;
-
-            for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    someDenied = true;
-                    Log.i("FloatingWidget", "Permissão negada: " + permissions[i]);
-                } else {
-                    Log.i("FloatingWidget", "Permissão concedida: " + permissions[i]);
-                }
-            }
-
-            if (!someDenied) {
-                Log.i("FloatingWidget", "Todas as permissões foram concedidas");
-                if (callbackContextPermission != null) {
-                    callbackContextPermission.success();
-                }
-            } else {
-                Log.i("FloatingWidget", "Redirecionando para configurações do app");
-                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                activity.startActivity(intent);
-
-                if (callbackContextPermission != null) {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("isPermissionBackground", false);
-                    jsonObject.put("message", "Permissão negada. Vá até as configurações do app.");
-                    callbackContextPermission.success(jsonObject);
-                }
-            }
-        }
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        Log.i("FloatingWidget", "onRequestPermissionsResult chamado");
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        onRequestPermissionResult(requestCode, permissions, grantResults);
     }
-
 
     private void getPermissionLocationService(JSONObject object) {
         Dexter
@@ -452,6 +419,45 @@ public class FloatingWidget extends CordovaPlugin {
                 startLocationService(object);
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        Log.i("FloatingWidget", "onRequestPermissionResult chamado");
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+
+        if (requestCode == CODE_REQUEST_PERMISSION) {
+            Activity activity = cordova.getActivity();
+            boolean someDenied = false;
+
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    someDenied = true;
+                    Log.i("FloatingWidget", "Permissão negada: " + permissions[i]);
+                } else {
+                    Log.i("FloatingWidget", "Permissão concedida: " + permissions[i]);
+                }
+            }
+
+            if (!someDenied) {
+                Log.i("FloatingWidget", "Todas as permissões foram concedidas");
+                if (callbackContextPermission != null) {
+                    callbackContextPermission.success();
+                }
+            } else {
+                Log.i("FloatingWidget", "Redirecionando para configurações do app");
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                activity.startActivity(intent);
+
+                if (callbackContextPermission != null) {
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("isPermissionBackground", false);
+                    jsonObject.put("message", "Permissão negada. Vá até as configurações do app.");
+                    callbackContextPermission.success(jsonObject);
+                }
             }
         }
     }

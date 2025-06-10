@@ -235,21 +235,17 @@ public class FloatingWidget extends CordovaPlugin {
             boolean backgroundLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
             if (!fineLocationGranted) {
-                // Solicita permissão de localização em primeiro plano
                 ActivityCompat.requestPermissions(activity,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         CODE_REQUEST_PERMISSION);
             } else if (!backgroundLocationGranted) {
-                // Solicita permissão de localização em segundo plano
                 ActivityCompat.requestPermissions(activity,
                         new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
                         CODE_REQUEST_PERMISSION);
             } else {
-                // Já possui todas as permissões
                 if (callbackContextPermission != null) callbackContextPermission.success();
             }
         } else {
-            // Para versões abaixo do Android 10
             boolean fineLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             if (!fineLocationGranted) {
                 ActivityCompat.requestPermissions(activity,
@@ -259,12 +255,6 @@ public class FloatingWidget extends CordovaPlugin {
                 if (callbackContextPermission != null) callbackContextPermission.success();
             }
         }
-
-        // Redireciona para as configurações do app após a solicitação de permissão
-        Log.i("FloatingWidget", "Redirecionando para configurações do app");
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + activity.getPackageName()));
-        activity.startActivity(intent);
     }
 
     private void closeFloatingWidget() {
@@ -275,6 +265,7 @@ public class FloatingWidget extends CordovaPlugin {
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        Log.i("FloatingWidget", "onRequestPermissionResult chamado");
         super.onRequestPermissionResult(requestCode, permissions, grantResults);
 
         if (requestCode == CODE_REQUEST_PERMISSION) {
@@ -295,7 +286,7 @@ public class FloatingWidget extends CordovaPlugin {
                     callbackContextPermission.success();
                 }
             } else {
-                // Sempre redireciona para as configurações do app
+                // Redireciona para as configurações do app
                 Log.i("FloatingWidget", "Redirecionando para configurações do app");
                 Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.parse("package:" + activity.getPackageName()));

@@ -469,10 +469,11 @@ public class FloatingWidget extends CordovaPlugin {
                     }
                 } else {
                     // BACKGROUND não concedido
+                    openAppLocationSettings();
                     if (callbackContextPermission != null) {
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("isPermissionBackground", true);
-                        jsonObject.put("message", "Permissão de localização em segundo plano não concedida.");
+                        jsonObject.put("message", "Permissão de localização em segundo plano não concedida. Vá nas configurações do app e permita 'Sempre'.");
                         callbackContextPermission.error(jsonObject);
                     }
                 }
@@ -492,5 +493,12 @@ public class FloatingWidget extends CordovaPlugin {
                 }
             }
         }
+    }
+
+    private void openAppLocationSettings() {
+        Activity activity = cordova.getActivity();
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+        activity.startActivity(intent);
     }
 }

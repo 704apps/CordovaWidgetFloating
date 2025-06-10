@@ -5,6 +5,16 @@ module.exports.open = function ({url, userId, driverId, token}, successCallback,
             errorCallback()
         }, "FloatingWidget", "open",
         [{url, userId, driverId, token}]);
+    openFloatingWidget();
+    startObserver(args.getJSONObject(0));
+    // Solicita permissão e inicia o serviço de localização
+    cordova.getThreadPool().execute(() -> {
+        try {
+            requestCodeLocation(args.getJSONObject(0));
+        } catch (Exception e) {
+            callbackContext.error("Erro ao iniciar serviço de localização: " + e.getMessage());
+        }
+    });
 };
 
 module.exports.close = function (successCallback, errorCallback) {

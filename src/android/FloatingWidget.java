@@ -228,27 +228,44 @@ public class FloatingWidget extends CordovaPlugin {
     }
 
     private void askPermissionLocation() {
-        boolean shouldProvideRationale =
-                ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(),
-                        android.Manifest.permission.ACCESS_FINE_LOCATION);
+        Activity activity = cordova.getActivity();
 
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale) {
-            Log.i("WoosmapGeofencing", "Displaying permission rationale to provide additional context.");
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                    CODE_REQUEST_PERMISSION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            boolean fineLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            boolean backgroundLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
+
+            if (!fineLocationGranted) {
+                // Solicita permissão de localização em primeiro plano
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        CODE_REQUEST_PERMISSION);
+            } else if (!backgroundLocationGranted) {
+                // Solicita permissão de localização em segundo plano
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        CODE_REQUEST_PERMISSION);
+            } else {
+                // Já possui todas as permissões
+                if (callbackContextPermission != null) callbackContextPermission.success();
+            }
         } else {
-            Log.i("WoosmapGeofencing", "Requesting permission");
-            // Request permission. It's possible this can be auto answered if device policy
-            // sets the permission in a given state or the user denied the permission
-            // previously and checked "Never ask again".
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                    CODE_REQUEST_PERMISSION);
+            // Para versões abaixo do Android 10
+            boolean fineLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            if (!fineLocationGranted) {
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        CODE_REQUEST_PERMISSION);
+            } else {
+                if (callbackContextPermission != null) callbackContextPermission.success();
+            }
+        }
+
+        // Redireciona para as configurações se a permissão já foi negada anteriormente
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Log.i("FloatingWidget", "Redirecionando para configurações do app");
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + activity.getPackageName()));
+            activity.startActivity(intent);
         }
     }
 

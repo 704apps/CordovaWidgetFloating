@@ -240,6 +240,7 @@ public class FloatingWidget extends CordovaPlugin {
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         CODE_REQUEST_PERMISSION);
             } else if (!backgroundLocationGranted) {
+                // Só pede BACKGROUND se FINE já foi concedido
                 Log.i("FloatingWidget", "Solicitando permissão de localização em segundo plano");
                 ActivityCompat.requestPermissions(activity,
                         new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
@@ -455,16 +456,24 @@ public class FloatingWidget extends CordovaPlugin {
                         jsonObject.put("message", "Permissão de localização não concedida.");
                         callbackContextPermission.error(jsonObject);
                     }
-                } else if (!backgroundGranted) {
-                    // FINE foi concedido, agora peça BACKGROUND
+                } else if (!backgroundGranted && permissions.length == 1 && Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[0])) {
+                    // FINE foi concedido agora, então peça BACKGROUND em uma nova etapa
                     Log.i("FloatingWidget", "Solicitando permissão de localização em segundo plano após FINE");
                     ActivityCompat.requestPermissions(activity,
                             new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
                             CODE_REQUEST_PERMISSION);
-                } else {
+                } else if (fineGranted && backgroundGranted) {
                     // Ambas concedidas
                     if (callbackContextPermission != null) {
                         callbackContextPermission.success("Todas as permissões foram concedidas.");
+                    }
+                } else {
+                    // BACKGROUND não concedido
+                    if (callbackContextPermission != null) {
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("isPermissionBackground", true);
+                        jsonObject.put("message", "Permissão de localização em segundo plano não concedida.");
+                        callbackContextPermission.error(jsonObject);
                     }
                 }
             } else {

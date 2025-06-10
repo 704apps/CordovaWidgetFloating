@@ -434,36 +434,54 @@ public class FloatingWidget extends CordovaPlugin {
 
         if (requestCode == CODE_REQUEST_PERMISSION) {
             Activity activity = cordova.getActivity();
-            boolean someDenied = false;
+            boolean fineGranted = false;
+            boolean backgroundGranted = false;
 
             for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    someDenied = true;
-                    Log.i("FloatingWidget", "Permissão negada: " + permissions[i]);
-                } else {
-                    Log.i("FloatingWidget", "Permissão concedida: " + permissions[i]);
+                if (Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[i])) {
+                    fineGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+                }
+                if (Manifest.permission.ACCESS_BACKGROUND_LOCATION.equals(permissions[i])) {
+                    backgroundGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
                 }
             }
 
-            if (!someDenied) {
-                Log.i("FloatingWidget", "Todas as permissões foram concedidas");
-                if (callbackContextPermission != null) {
-                    callbackContextPermission.success("Todas as permissões foram concedidas.");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (!fineGranted) {
+                    // Usuário não concedeu nem o FINE, não adianta pedir BACKGROUND
+                    if (callbackContextPermission != null) {
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("isPermissionBackground", false);
+                        jsonObject.put("message", "Permissão de localização não concedida.");
+                        callbackContextPermission.error(jsonObject);
+                    }
+                } else if (!backgroundGranted) {
+                    // FINE foi concedido, agora peça BACKGROUND
+                    Log.i("FloatingWidget", "Solicitando permissão de localização em segundo plano após FINE");
+                    ActivityCompat.requestPermissions(activity,
+                            new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                            CODE_REQUEST_PERMISSION);
+                } else {
+                    // Ambas concedidas
+                    if (callbackContextPermission != null) {
+                        callbackContextPermission.success("Todas as permissões foram concedidas.");
+                    }
                 }
             } else {
-                Log.i("FloatingWidget", "Redirecionando para configurações do app");
-                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                activity.startActivity(intent);
-
-                if (callbackContextPermission != null) {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("isPermissionBackground", false);
-                    jsonObject.put("message", "Permissão negada. Vá até as configurações do app.");
-                    callbackContextPermission.error(jsonObject);
+                // Android < Q
+                if (fineGranted) {
+                    if (callbackContextPermission != null) {
+                        callbackContextPermission.success("Permissão de localização já concedida.");
+                    }
+                } else {
+                    if (callbackContextPermission != null) {
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("isPermissionBackground", false);
+                        jsonObject.put("message", "Permissão de localização não concedida.");
+                        callbackContextPermission.error(jsonObject);
+                    }
                 }
             }
         }
     }
-
 }

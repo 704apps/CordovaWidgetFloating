@@ -246,7 +246,9 @@ public class FloatingWidget extends CordovaPlugin {
                         CODE_REQUEST_PERMISSION);
             } else {
                 Log.i("FloatingWidget", "Todas as permissões já concedidas");
-                if (callbackContextPermission != null) callbackContextPermission.success();
+                if (callbackContextPermission != null) {
+                    callbackContextPermission.success("Todas as permissões já concedidas.");
+                }
             }
         } else {
             boolean fineLocationGranted = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -257,7 +259,9 @@ public class FloatingWidget extends CordovaPlugin {
                         CODE_REQUEST_PERMISSION);
             } else {
                 Log.i("FloatingWidget", "Permissão de localização já concedida em versões abaixo do Android 10");
-                if (callbackContextPermission != null) callbackContextPermission.success();
+                if (callbackContextPermission != null) {
+                    callbackContextPermission.success("Permissão de localização já concedida.");
+                }
             }
         }
     }
@@ -444,7 +448,7 @@ public class FloatingWidget extends CordovaPlugin {
             if (!someDenied) {
                 Log.i("FloatingWidget", "Todas as permissões foram concedidas");
                 if (callbackContextPermission != null) {
-                    callbackContextPermission.success();
+                    callbackContextPermission.success("Todas as permissões foram concedidas.");
                 }
             } else {
                 Log.i("FloatingWidget", "Redirecionando para configurações do app");
@@ -456,7 +460,7 @@ public class FloatingWidget extends CordovaPlugin {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("isPermissionBackground", false);
                     jsonObject.put("message", "Permissão negada. Vá até as configurações do app.");
-                    callbackContextPermission.success(jsonObject);
+                    callbackContextPermission.error(jsonObject);
                 }
             }
         }

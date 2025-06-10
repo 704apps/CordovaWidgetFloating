@@ -497,8 +497,10 @@ public class FloatingWidget extends CordovaPlugin {
 
     private void openAppLocationSettings() {
         Activity activity = cordova.getActivity();
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + activity.getPackageName()));
-        activity.startActivity(intent);
+        new android.os.Handler(activity.getMainLooper()).postDelayed(() -> {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + activity.getPackageName()));
+            activity.startActivity(intent);
+        }, 500); // 500ms de delay
     }
 }

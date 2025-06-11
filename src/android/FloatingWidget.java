@@ -231,6 +231,9 @@ public class FloatingWidget extends CordovaPlugin {
     }
 
     private void askPermissionLocation() {
+        // Logs de debug para informar que o método askPermissionLocation foi chamado
+        Log.d("FloatingWidget", "askPermissionLocation foi chamado");
+        Log.i("FloatingWidget", "Verificando permissões de localização");
         boolean shouldProvideRationale =
                 ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(),
                         android.Manifest.permission.ACCESS_FINE_LOCATION);

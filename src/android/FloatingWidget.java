@@ -264,9 +264,10 @@ public class FloatingWidget extends CordovaPlugin {
         // Se já tem FINE_LOCATION, mas não tem BACKGROUND_LOCATION
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !backgroundLocationGranted) {
             try {
-                // Tenta abrir a tela de permissões específicas do app
-                Intent intent = new Intent("android.settings.APP_PERMISSION_DETAILS");
-                intent.setData(Uri.fromParts("package", cordova.getActivity().getPackageName(), null));
+                // Tenta abrir a tela de permissões específicas do app (não documentada)
+                Intent intent = new Intent("android.settings.APP_PERMISSION_SETTINGS");
+                intent.addCategory(Intent.CATEGORY_DEFAULT);
+                intent.putExtra("android.provider.extra.APP_PACKAGE", cordova.getActivity().getPackageName());
                 cordova.getActivity().startActivity(intent);
             } catch (Exception e) {
                 // Fallback para configurações gerais do app

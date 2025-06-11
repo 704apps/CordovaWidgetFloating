@@ -233,14 +233,9 @@ public class FloatingWidget extends CordovaPlugin {
     }
 
     private void askPermissionLocation() {
-        // Logs de debug para informar que o método askPermissionLocation foi chamado
         Log.d("FloatingWidget", "askPermissionLocation foi chamado");
         Log.i("FloatingWidget", "Verificando permissões de localização");
-        boolean shouldProvideRationale =
-                ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(),
-                        android.Manifest.permission.ACCESS_FINE_LOCATION);
 
-        // Logs de debug para informar o status das permissões de localização
         boolean fineLocationGranted =
                 ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED;
@@ -258,19 +253,27 @@ public class FloatingWidget extends CordovaPlugin {
             Log.d("FloatingWidget", "[Permissão] ACCESS_BACKGROUND_LOCATION não é exigida nesta versão do Android");
         }
 
-        // Forneça uma justificativa adicional ao usuário. Isso acontecerá se o usuário negou a solicitação anteriormente, mas não marcou a caixa "Não perguntar novamente".
-        // Forneça uma justificativa adicional ao usuário. Isso acontecerá se o usuário negou a solicitação anteriormente, mas não marcou a caixa "Não perguntar novamente".
-        if (shouldProvideRationale) {
-            Log.i("WoosmapGeofencing", "Exibindo justificativa de permissão para fornecer contexto adicional.");
+        if (!fineLocationGranted) {
+            // Solicita apenas a permissão de primeiro plano
             ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     CODE_REQUEST_PERMISSION);
-        } else {
-            Log.i("WoosmapGeofencing", "Solicitando permissão");
-            // Solicita permissão. É possível que isso seja respondido automaticamente se a política do dispositivo definir a permissão em um determinado estado ou se o usuário negou a permissão anteriormente e marcou "Nunca perguntar novamente".
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                    CODE_REQUEST_PERMISSION);
+            return;
+        }
+
+        // Se já tem FINE_LOCATION, mas não tem BACKGROUND_LOCATION
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !backgroundLocationGranted) {
+            // Android 11+ deve direcionar para as configurações
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + cordova.getActivity().getPackageName()));
+            cordova.getActivity().startActivity(intent);
+            Toast.makeText(cordova.getActivity(), "Conceda a permissão de localização em segundo plano nas configurações do app.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Se já tem todas as permissões
+        if (callbackContextPermission != null) {
+            callbackContextPermission.success();
         }
     }
 

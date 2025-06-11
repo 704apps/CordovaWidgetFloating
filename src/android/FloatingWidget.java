@@ -263,11 +263,24 @@ public class FloatingWidget extends CordovaPlugin {
 
         // Se já tem FINE_LOCATION, mas não tem BACKGROUND_LOCATION
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !backgroundLocationGranted) {
-            // Android 11+ deve direcionar para as configurações
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + cordova.getActivity().getPackageName()));
-            cordova.getActivity().startActivity(intent);
-            Toast.makeText(cordova.getActivity(), "Conceda a permissão de localização em segundo plano nas configurações do app.", Toast.LENGTH_LONG).show();
+            try {
+                // Tenta abrir a tela de permissões específicas do app
+                Intent intent = new Intent("android.settings.APP_PERMISSION_DETAILS");
+                intent.setData(Uri.fromParts("package", cordova.getActivity().getPackageName(), null));
+                cordova.getActivity().startActivity(intent);
+            } catch (Exception e) {
+                // Fallback para configurações gerais do app
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + cordova.getActivity().getPackageName()));
+                cordova.getActivity().startActivity(intent);
+            }
+            cordova.getActivity().runOnUiThread(() ->
+                Toast.makeText(
+                    cordova.getActivity(),
+                    "Para localização em segundo plano, vá em 'Permissões' > 'Localização' > 'Permitir o tempo todo'.",
+                    Toast.LENGTH_LONG
+                ).show()
+            );
             return;
         }
 

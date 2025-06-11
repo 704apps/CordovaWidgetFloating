@@ -78,6 +78,8 @@ public class FloatingWidget extends CordovaPlugin {
         }
 
         if (action.equals("askPermissionLocation")) {
+            Log.d("FloatingWidget", "Chamando askPermissionLocation pelo execute");
+            Log.i("FloatingWidget", "Solicitando permissão de localização");
             callbackContextPermission = callbackContext;
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {

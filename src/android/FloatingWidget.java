@@ -235,20 +235,34 @@ public class FloatingWidget extends CordovaPlugin {
                 ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(),
                         android.Manifest.permission.ACCESS_FINE_LOCATION);
 
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
+        // Logs de debug para informar o status das permissões de localização
+        boolean fineLocationGranted =
+                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
+        boolean backgroundLocationGranted = false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            backgroundLocationGranted =
+                    ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED;
+        }
+
+        Log.d("FloatingWidget", "[Permissão] ACCESS_FINE_LOCATION concedida: " + fineLocationGranted);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Log.d("FloatingWidget", "[Permissão] ACCESS_BACKGROUND_LOCATION concedida: " + backgroundLocationGranted);
+        } else {
+            Log.d("FloatingWidget", "[Permissão] ACCESS_BACKGROUND_LOCATION não é exigida nesta versão do Android");
+        }
+
+        // Forneça uma justificativa adicional ao usuário. Isso acontecerá se o usuário negou a solicitação anteriormente, mas não marcou a caixa "Não perguntar novamente".
+        // Forneça uma justificativa adicional ao usuário. Isso acontecerá se o usuário negou a solicitação anteriormente, mas não marcou a caixa "Não perguntar novamente".
         if (shouldProvideRationale) {
-            Log.i("WoosmapGeofencing", "Displaying permission rationale to provide additional context.");
+            Log.i("WoosmapGeofencing", "Exibindo justificativa de permissão para fornecer contexto adicional.");
             ActivityCompat.requestPermissions(cordova.getActivity(),
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
                     CODE_REQUEST_PERMISSION);
         } else {
-            Log.i("WoosmapGeofencing", "Requesting permission");
-            // Request permission. It's possible this can be auto answered if device policy
-            // sets the permission in a given state or the user denied the permission
-            // previously and checked "Never ask again".
+            Log.i("WoosmapGeofencing", "Solicitando permissão");
+            // Solicita permissão. É possível que isso seja respondido automaticamente se a política do dispositivo definir a permissão em um determinado estado ou se o usuário negou a permissão anteriormente e marcou "Nunca perguntar novamente".
             ActivityCompat.requestPermissions(cordova.getActivity(),
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
                     CODE_REQUEST_PERMISSION);

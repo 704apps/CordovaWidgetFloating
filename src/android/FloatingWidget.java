@@ -232,69 +232,82 @@ public class FloatingWidget extends CordovaPlugin {
 
     }
 
+    private static final int CODE_REQUEST_FINE_LOCATION = 1001;
+    private static final int CODE_REQUEST_BACKGROUND_LOCATION = 1002;
+
     private void askPermissionLocation() {
-        Log.d("FloatingWidget", "askPermissionLocation foi chamado");
-        Log.i("FloatingWidget", "Verificando permissões de localização");
+        Activity activity = cordova.getActivity();
 
-        boolean fineLocationGranted =
-                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
-        boolean backgroundLocationGranted = false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            backgroundLocationGranted =
-                    ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED;
-        }
+        // Verifica se já tem a permissão de localização em primeiro plano
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
 
-        Log.d("FloatingWidget", "[Permissão] ACCESS_FINE_LOCATION concedida: " + fineLocationGranted);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Log.d("FloatingWidget", "[Permissão] ACCESS_BACKGROUND_LOCATION concedida: " + backgroundLocationGranted);
-        } else {
-            Log.d("FloatingWidget", "[Permissão] ACCESS_BACKGROUND_LOCATION não é exigida nesta versão do Android");
-        }
+            boolean shouldProvideRationale =
+                    ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                            Manifest.permission.ACCESS_FINE_LOCATION);
 
-        if (!fineLocationGranted) {
-            // Solicita apenas a permissão de primeiro plano
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    CODE_REQUEST_PERMISSION);
-            return;
-        }
-
-        // Se já tem FINE_LOCATION, mas não tem BACKGROUND_LOCATION
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && !backgroundLocationGranted) {
-            // Android 10 (API 29): pode pedir via diálogo
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                    CODE_REQUEST_PERMISSION);
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !backgroundLocationGranted) {
-            // Android 11+ (API 30+): só via configurações
-            try {
-                Intent intent = new Intent("android.settings.APP_PERMISSION_SETTINGS");
-                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.putExtra("android.provider.extra.APP_PACKAGE", cordova.getActivity().getPackageName());
-                cordova.getActivity().startActivity(intent);
-            } catch (Exception e) {
-                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.parse("package:" + cordova.getActivity().getPackageName()));
-                cordova.getActivity().startActivity(intent);
+            if (shouldProvideRationale) {
+                Log.i("FloatingWidget", "Exibindo rationale para ACCESS_FINE_LOCATION.");
+                // Aqui você pode exibir um AlertDialog explicando o motivo, se quiser.
+            } else {
+                Log.i("FloatingWidget", "Solicitando ACCESS_FINE_LOCATION.");
             }
-            cordova.getActivity().runOnUiThread(() ->
-                Toast.makeText(
-                    cordova.getActivity(),
-                    "Para localização em segundo plano, vá em 'Permissões' > 'Localização' > 'Permitir o tempo todo'.",
-                    Toast.LENGTH_LONG
-                ).show()
-            );
-            return;
-        }
 
-        // Se já tem todas as permissões
-        if (callbackContextPermission != null) {
-            callbackContextPermission.success();
+            ActivityCompat.requestPermissions(
+                    activity,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    CODE_REQUEST_FINE_LOCATION
+            );
+
+        } else {
+            // Se já tem a permissão de localização em primeiro plano, verifica e solicita a de background
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q &&
+                    ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
+
+                boolean shouldProvideRationale =
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+
+                if (shouldProvideRationale) {
+                    Log.i("FloatingWidget", "Exibindo rationale para ACCESS_BACKGROUND_LOCATION.");
+                    // Aqui você pode exibir um AlertDialog explicando o motivo, se quiser.
+                } else {
+                    Log.i("FloatingWidget", "Solicitando ACCESS_BACKGROUND_LOCATION.");
+                }
+
+                ActivityCompat.requestPermissions(
+                        activity,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        CODE_REQUEST_BACKGROUND_LOCATION
+                );
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+                    ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
+                // Android 11+ (API 30+): só via configurações
+                try {
+                    Intent intent = new Intent("android.settings.APP_PERMISSION_SETTINGS");
+                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+                    intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                    activity.startActivity(intent);
+                }
+                activity.runOnUiThread(() ->
+                    Toast.makeText(
+                        activity,
+                        "Para localização em segundo plano, vá em 'Permissões' > 'Localização' > 'Permitir o tempo todo'.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                );
+            } else {
+                Log.i("FloatingWidget", "Todas as permissões já foram concedidas.");
+                if (callbackContextPermission != null) {
+                    callbackContextPermission.success();
+                }
+            }
         }
     }
 

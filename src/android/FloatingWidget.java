@@ -197,6 +197,7 @@ public class FloatingWidget extends CordovaPlugin {
         boolean permissionAccessCoarseLocationApproved =
                 ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED;
+        Log.d("FloatingWidget", "Permissão FINE_LOCATION: " + permissionAccessCoarseLocationApproved);
 
         if (permissionAccessCoarseLocationApproved) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -204,6 +205,8 @@ public class FloatingWidget extends CordovaPlugin {
                         ActivityCompat.checkSelfPermission(cordova.getContext(),
                                 Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                                 == PackageManager.PERMISSION_GRANTED;
+
+                Log.d("FloatingWidget", "Permissão BACKGROUND_LOCATION: " + backgroundLocationPermissionApproved);
 
                 if (!backgroundLocationPermissionApproved) {
                     JSONObject jsonObject = new JSONObject();

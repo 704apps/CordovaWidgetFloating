@@ -78,6 +78,8 @@ public class FloatingWidget extends CordovaPlugin {
         }
 
         if (action.equals("askPermissionLocation")) {
+            Log.d("FloatingWidget", "Chamando askPermissionLocation pelo execute");
+            Log.i("FloatingWidget", "Solicitando permissão de localização");
             callbackContextPermission = callbackContext;
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
@@ -197,6 +199,7 @@ public class FloatingWidget extends CordovaPlugin {
         boolean permissionAccessCoarseLocationApproved =
                 ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED;
+        Log.d("FloatingWidget", "Permissão FINE_LOCATION: " + permissionAccessCoarseLocationApproved);
 
         if (permissionAccessCoarseLocationApproved) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -204,6 +207,8 @@ public class FloatingWidget extends CordovaPlugin {
                         ActivityCompat.checkSelfPermission(cordova.getContext(),
                                 Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                                 == PackageManager.PERMISSION_GRANTED;
+
+                Log.d("FloatingWidget", "Permissão BACKGROUND_LOCATION: " + backgroundLocationPermissionApproved);
 
                 if (!backgroundLocationPermissionApproved) {
                     JSONObject jsonObject = new JSONObject();
@@ -227,31 +232,73 @@ public class FloatingWidget extends CordovaPlugin {
 
     }
 
-    private void askPermissionLocation() {
-        boolean shouldProvideRationale =
-                ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(),
-                        android.Manifest.permission.ACCESS_FINE_LOCATION);
+    private static final int CODE_REQUEST_FINE_LOCATION = 1001;
+    private static final int CODE_REQUEST_BACKGROUND_LOCATION = 1002;
 
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale) {
-            Log.i("WoosmapGeofencing", "Displaying permission rationale to provide additional context.");
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                    CODE_REQUEST_PERMISSION);
+    /**
+     * Solicita permissões de localização ao usuário.
+     *
+     * Fluxo:
+     * 1. Se não possui ACCESS_FINE_LOCATION, solicita essa permissão.
+     *    - Se necessário, exibe rationale (explicação) via log.
+     * 2. Se já possui ACCESS_FINE_LOCATION:
+     *    - Para Android 10 (API 29): solicita ACCESS_BACKGROUND_LOCATION via diálogo.
+     *    - Para Android 11+ (API 30+): solicita ACCESS_BACKGROUND_LOCATION via diálogo (não funciona, pois o sistema ignora),
+     *      o correto seria redirecionar para as configurações do app.
+     *    - Se já possui todas as permissões, apenas loga que está tudo concedido.
+     */
+    private void askPermissionLocation() {
+        Activity activity = cordova.getActivity();
+
+        // Verifica se já tem a permissão de localização em primeiro plano
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            boolean shouldProvideRationale =
+                    ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                            Manifest.permission.ACCESS_FINE_LOCATION);
+
+            if (shouldProvideRationale) {
+                Log.i("WoosmapGeofencing", "Exibindo rationale para ACCESS_FINE_LOCATION.");
+            } else {
+                Log.i("WoosmapGeofencing", "Solicitando ACCESS_FINE_LOCATION.");
+            }
+
+            // Solicita a permissão de localização em primeiro plano
+            ActivityCompat.requestPermissions(
+                    activity,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    CODE_REQUEST_FINE_LOCATION
+            );
+
         } else {
-            Log.i("WoosmapGeofencing", "Requesting permission");
-            // Request permission. It's possible this can be auto answered if device policy
-            // sets the permission in a given state or the user denied the permission
-            // previously and checked "Never ask again".
-            ActivityCompat.requestPermissions(cordova.getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                    CODE_REQUEST_PERMISSION);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                    ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
+
+                boolean shouldProvideRationale =
+                        ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+
+                if (shouldProvideRationale) {
+                    Log.i("WoosmapGeofencing", "Exibindo rationale para ACCESS_BACKGROUND_LOCATION.");
+                } else {
+                    Log.i("WoosmapGeofencing", "Solicitando ACCESS_BACKGROUND_LOCATION.");
+                }
+
+                // Solicita a permissão de localização em segundo plano
+                ActivityCompat.requestPermissions(
+                        activity,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        CODE_REQUEST_BACKGROUND_LOCATION
+                );
+            } else {
+                // Todas as permissões já foram concedidas
+                Log.i("WoosmapGeofencing", "Todas as permissões já foram concedidas.");
+            }
         }
     }
-
+    
     private void closeFloatingWidget() {
         Intent intent = new Intent(cordova.getContext(), FloatingWidgetService.class);
         cordova.getContext().stopService(intent);

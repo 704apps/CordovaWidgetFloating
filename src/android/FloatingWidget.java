@@ -171,28 +171,50 @@ public class FloatingWidget extends CordovaPlugin {
     private void askForSystemOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(cordova.getContext())) {
-                if ("xiaomi".equals(Build.MANUFACTURER.toLowerCase(Locale.ROOT))) {
-                    final Intent intent = new Intent("miui.intent.action.APP_PERM_EDITOR");
-                    intent.setClassName("com.miui.securitycenter",
-                            "com.miui.permcenter.permissions.PermissionsEditorActivity");
-                    intent.putExtra("extra_pkgname", cordova.getActivity().getPackageName());
-                    new AlertDialog.Builder(cordova.getContext())
-                            .setTitle("Habilite as permissões adicionais")
-                            .setMessage("Você não receberá notificações enquanto o aplicativo estiver em segundo plano se desativar essas permissões")
-                            .setPositiveButton("Vá para as configurações", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    cordova.getActivity().startActivity(intent);
-                                }
-                            })
-                            .setIcon(android.R.drawable.ic_dialog_info)
-                            .setCancelable(false)
-                            .show();
-                } else {
-                    Intent overlaySettings = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + cordova.getActivity().getPackageName()));
-                    cordova.getActivity().startActivityForResult(overlaySettings, OVERLAY_REQUEST_CODE);
+                if (!tryXiaomiSpecificPermissionDialog()) {
+                    openStandardOverlaySettings();
                 }
             }
         }
+    }
+
+    private boolean tryXiaomiSpecificPermissionDialog() {
+        // Se não é dispositivo Xiaomi, não tenta o método específico
+        if (!"xiaomi".equals(Build.MANUFACTURER.toLowerCase(Locale.ROOT))) {
+            return false;
+        }
+        
+        // Criar intent específico para MIUI
+        final Intent intent = new Intent("miui.intent.action.APP_PERM_EDITOR");
+        intent.setClassName("com.miui.securitycenter",
+                "com.miui.permcenter.permissions.PermissionsEditorActivity");
+        intent.putExtra("extra_pkgname", cordova.getActivity().getPackageName());
+        
+        // Verificar se a activity existe antes de tentar abrir
+        if (intent.resolveActivity(cordova.getActivity().getPackageManager()) == null) {
+            return false; // Activity não existe, vai usar fallback
+        }
+        
+        // Activity existe, mostrar dialog específico para Xiaomi
+        new AlertDialog.Builder(cordova.getContext())
+                .setTitle("Habilite as permissões adicionais")
+                .setMessage("Você não receberá notificações enquanto o aplicativo estiver em segundo plano se desativar essas permissões")
+                .setPositiveButton("Vá para as configurações", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        cordova.getActivity().startActivity(intent);
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setCancelable(false)
+                .show();
+        
+        return true; // Dialog foi mostrado com sucesso
+    }
+
+    private void openStandardOverlaySettings() {
+        Intent overlaySettings = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, 
+            Uri.parse("package:" + cordova.getActivity().getPackageName()));
+        cordova.getActivity().startActivityForResult(overlaySettings, OVERLAY_REQUEST_CODE);
     }
 
     private void getPermissionLocation(CallbackContext callbackContext) {

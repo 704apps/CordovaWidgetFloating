@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.provider.Settings;
 import androidx.core.app.ActivityCompat;
@@ -110,6 +111,16 @@ public class FloatingWidget extends CordovaPlugin {
             return true;
         }
 
+        if (action.equals("askDataSaverExceptionPermission")) {
+            // Chama a função para solicitar a exceção de Data Saver
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    checkAndRequestDataSaverException(cordova.getActivity());
+                }
+            });
+            return true;
+        }
+
         if (action.equals("onListenerLocation")) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
@@ -152,18 +163,48 @@ public class FloatingWidget extends CordovaPlugin {
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(cordova.getContext()));
     }
 
+    public void checkAndRequestDataSaverException(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    
+            // Verifica se a rede é medida
+            if (connMgr.isActiveNetworkMetered()) {
+                PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+    
+                // Verifica se o aplicativo está na lista de exceções de restrição de dados
+                if (!powerManager.isIgnoringBatteryOptimizations(context.getPackageName())) {
+                    // O app não está na lista de exceção, redireciona o usuário para as configurações de Data Saver
+                    Intent intent = new Intent(Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS,
+                            Uri.parse("package:" + context.getPackageName()));
+                    context.startActivity(intent);
+                }
+            }
+        }
+    }    
+
     private void openFloatingWidget() {
         Activity context = cordova.getActivity();
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             context.startService(new Intent(cordova.getActivity(), FloatingWidgetService.class));
             // finish();
-        } else if (Settings.canDrawOverlays(cordova.getActivity())) {
-            context.startService(new Intent(cordova.getActivity(), FloatingWidgetService.class));
-            // finish();
         } else {
-            askForSystemOverlayPermission();
-            Toast.makeText(cordova.getActivity(), "You need System Alert Window Permission to do this", Toast.LENGTH_SHORT).show();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            
+                int dataSaverStatus = connectivityManager.getRestrictBackgroundStatus();
+                switch (dataSaverStatus) {
+                    case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED:
+                            Intent intent = new Intent(Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS,
+                            Uri.parse("package:" + context.getPackageName()));
+                        context.startActivity(intent);
+                        break;
+                    case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED:
+                        break;
+                    case ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED:
+                        break;
+                }
+            }
         }
 
     }

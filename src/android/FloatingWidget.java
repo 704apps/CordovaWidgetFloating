@@ -470,6 +470,9 @@ public class FloatingWidget extends CordovaPlugin {
             if(object.has("fastestInterval")) {
                 intent.putExtra("fastestInterval", object.getLong("fastestInterval"));
             }
+            if (object.has("distanceFilter")) {
+                intent.putExtra("distanceFilter", (float) object.getDouble("distanceFilter"));
+            }
 
             cordova.getActivity().startService(intent);
         }

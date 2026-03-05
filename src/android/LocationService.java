@@ -72,7 +72,6 @@ public class LocationService extends Service {
     public static final String ACTION_PROCESS_UPDATE = "com.plugin.widgetfloat.UPDATE_LOCATION";
     private long interval = 20000;
     private long fastestInterval = 20000;
-    private float distanceFilter = 10f;
 
 
     @Nullable
@@ -122,7 +121,6 @@ public class LocationService extends Service {
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(interval);
         locationRequest.setFastestInterval(fastestInterval);
-        locationRequest.setSmallestDisplacement(distanceFilter);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -159,8 +157,6 @@ public class LocationService extends Service {
                     data =  intent.getExtras().getString("data");
                     interval = intent.getExtras().getLong("interval",20000);
                     fastestInterval = intent.getExtras().getLong("fastestInterval",20000);
-                    distanceFilter = intent.getExtras().getFloat("distanceFilter", 10f);
-
                     startLocationService();
                 } else if (action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)){
                     stopLocationService();

@@ -38,29 +38,22 @@ public class LocationService extends Service {
             if (locationResult != null && locationResult.getLastLocation() != null) {
                 double latitude = locationResult.getLastLocation().getLatitude();
                 double longitude = locationResult.getLastLocation().getLongitude();
+                try {
+                    // Always notify local listeners (bubble/app), even when no backend URL is configured.
+                    Intent intent = new Intent("location_update");
+                    intent.putExtra("latitude", latitude);
+                    intent.putExtra("longitude", longitude);
+                    sendBroadcast(intent);
 
-                if (url != null){
-                    try {
+                    if (url != null && !url.trim().isEmpty()) {
                         Map<String, String> headers = new HashMap<>();
-
-                        JSONObject objectData = new JSONObject(data);
-                        objectData.put("latitude", latitude);
-                        objectData.put("longitude", longitude);
-
+                        JSONObject objectData = buildPayloadWithLocation(latitude, longitude);
                         JSONArray datas = new JSONArray();
-
                         datas.put(objectData);
-
                         requestApi.sendPost(getApplicationContext(), url, datas.toString(), headers);
-
-                        Intent intent = new Intent("location_update");
-                        intent.putExtra("latitude",latitude);
-                        intent.putExtra("longitude",longitude);
-
-                        sendBroadcast(intent);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
+                } catch (JSONException e) {
+                    Log.e("LocationService", "Falha ao montar payload de localização", e);
                 }
             }
         }
@@ -72,6 +65,19 @@ public class LocationService extends Service {
     public static final String ACTION_PROCESS_UPDATE = "com.plugin.widgetfloat.UPDATE_LOCATION";
     private long interval = 20000;
     private long fastestInterval = 20000;
+
+    private JSONObject buildPayloadWithLocation(double latitude, double longitude) throws JSONException {
+        JSONObject objectData;
+        if (data != null && !data.trim().isEmpty()) {
+            objectData = new JSONObject(data);
+        } else {
+            objectData = new JSONObject();
+        }
+
+        objectData.put("latitude", latitude);
+        objectData.put("longitude", longitude);
+        return objectData;
+    }
 
 
     @Nullable
@@ -123,21 +129,16 @@ public class LocationService extends Service {
         locationRequest.setFastestInterval(fastestInterval);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+        startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            stopForeground(true);
+            stopSelf();
             return;
         }
+
         LocationServices.getFusedLocationProviderClient(this)
                 .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-
-
-        startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
     }
 
     private void stopLocationService(){
@@ -153,17 +154,18 @@ public class LocationService extends Service {
             String action = intent.getAction();
             if(action != null){
                 if(action.equals(Constants.ACTION_START_LOCATION_SERVICE)){
-                    url = intent.getExtras().getString("url");
-                    data =  intent.getExtras().getString("data");
-                    interval = intent.getExtras().getLong("interval",20000);
-                    fastestInterval = intent.getExtras().getLong("fastestInterval",20000);
+                    if (intent.getExtras() != null) {
+                        url = intent.getExtras().getString("url");
+                        data = intent.getExtras().getString("data");
+                        interval = intent.getExtras().getLong("interval",20000);
+                        fastestInterval = intent.getExtras().getLong("fastestInterval",20000);
+                    }
                     startLocationService();
                 } else if (action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)){
                     stopLocationService();
                 }
             }
         }
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 }

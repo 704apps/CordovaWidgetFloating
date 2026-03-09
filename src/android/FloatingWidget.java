@@ -462,16 +462,20 @@ public class FloatingWidget extends CordovaPlugin {
         if (!isLocationServiceRunning()) {
             Intent intent = new Intent(cordova.getActivity().getApplicationContext(), LocationService.class);
             intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
-            intent.putExtra("url", object.getString("url"));
-            intent.putExtra("data", object.getString("data"));
+            intent.putExtra("url", object.optString("url", ""));
+            intent.putExtra("data", object.optString("data", "{}"));
             if(object.has("interval")) {
                 intent.putExtra("interval", object.getLong("interval"));
             }
             if(object.has("fastestInterval")) {
                 intent.putExtra("fastestInterval", object.getLong("fastestInterval"));
             }
-            
-            cordova.getActivity().startService(intent);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.startForegroundService(cordova.getActivity(), intent);
+            } else {
+                cordova.getActivity().startService(intent);
+            }
         }
     }
 
